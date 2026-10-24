@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CinePulse - Movie Reviews & Rating Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            900: '#881337',
+                        },
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Glassmorphism utility */
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Card Hover Animations */
+        .movie-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .movie-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(244, 63, 94, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        }
+        .hero-gradient-overlay {
+            background: linear-gradient(0deg, #0b0f19 0%, rgba(11, 15, 25, 0.7) 50%, rgba(11, 15, 25, 0.3) 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-40 glass transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-orange-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                    <i class="fa-solid font-bold fa-film text-white text-xl"></i>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tight text-white">Cine<span class="text-gradient">Pulse</span></span>
+            </div>
+
+            <!-- Quick Navigation / Watchlist / Dark Mode -->
+            <div class="flex items-center space-x-4">
+                <button id="watchlist-toggle-btn" onclick="toggleWatchlistView()" class="relative flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                    <i class="fa-solid fa-bookmark text-brand-500"></i>
+                    <span class="hidden sm:inline font-medium text-sm">Watchlist</span>
+                    <span id="watchlist-badge" class="ml-1 bg-brand-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+
+        <!-- Hero Slider Section -->
+        <section id="hero-section" class="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 min-h-[420px] sm:min-h-[500px] flex items-end">
+            <!-- Dynamic Hero Backdrop -->
+            <div id="hero-backdrop" class="absolute inset-0 bg-cover bg-center transition-all duration-700 transform scale-105">
+                <div class="absolute inset-0 hero-gradient-overlay"></div>
+            </div>
+
+            <!-- Hero Content -->
+            <div class="relative z-10 p-6 sm:p-10 max-w-3xl space-y-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span id="hero-badge" class="bg-brand-600/90 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-md">Featured Spotlight</span>
+                    <span id="hero-rating" class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                        <i class="fa-solid fa-star"></i> <span>8.9</span>
+                    </span>
+                    <span id="hero-year" class="text-slate-300 text-xs font-medium px-2">2023</span>
+                </div>
+
+                <h1 id="hero-title" class="text-3xl sm:text-5xl font-black text-white leading-tight drop-shadow-md">
+                    Dune: Part Two
+                </h1>
+
+                <p id="hero-overview" class="text-slate-300 text-sm sm:text-base line-clamp-3 leading-relaxed drop-shadow">
+                    Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.
+                </p>
+
+                <div class="flex flex-wrap items-center gap-4 pt-2">
+                    <button id="hero-play-btn" onclick="" class="flex items-center space-x-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-brand-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Watch Trailer</span>
+                    </button>
+                    <button id="hero-details-btn" onclick="" class="flex items-center space-x-2 bg-slate-800/80 hover:bg-slate-700 text-white font-semibold px-6 py-3 rounded-xl border border-slate-700 backdrop-blur-md transition">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>More Details</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hero Nav Arrows & Indicators -->
+            <div class="absolute bottom-6 right-6 z-20 flex items-center space-x-2 bg-slate-900/60 p-1.5 rounded-2xl backdrop-blur-md border border-slate-800">
+                <button onclick="prevHero()" class="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-brand-600 text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button onclick="nextHero()" class="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-brand-600 text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Filter & Search Controls Bar -->
+        <section class="glass rounded-2xl p-5 sm:p-6 shadow-xl space-y-4 border border-slate-800">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                
+                <!-- Search Input -->
+                <div class="md:col-span-4 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" placeholder="Search movies by title, director, cast..." 
+                        class="w-full bg-slate-900/90 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-400 outline-none transition">
+                </div>
+
+                <!-- Genre Filter Dropdown -->
+                <div class="md:col-span-3">
+                    <select id="genre-select" class="w-full bg-slate-900/90 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-3 text-sm text-white outline-none transition cursor-pointer">
+                        <option value="all">All Genres</option>
+                        <option value="Action">Action</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Animation">Animation</option>
+                        <option value="Thriller">Thriller</option>
+                        <option value="Comedy">Comedy</option>
+                    </select>
+                </div>
+
+                <!-- Sort By Dropdown -->
+                <div class="md:col-span-3">
+                    <select id="sort-select" class="w-full bg-slate-900/90 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-3 text-sm text-white outline-none transition cursor-pointer">
+                        <option value="popularity">Sort by: Popularity</option>
+                        <option value="rating-desc">Sort by: Highest Rating</option>
+                        <option value="rating-asc">Sort by: Lowest Rating</option>
+                        <option value="date-desc">Sort by: Release Date (Newest)</option>
+                        <option value="date-asc">Sort by: Release Date (Oldest)</option>
+                    </select>
+                </div>
+
+                <!-- Reset Filters Button -->
+                <div class="md:col-span-2 flex justify-end">
+                    <button onclick="resetFilters()" class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-sm font-medium transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Minimum Rating Filter Slider -->
+            <div class="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center space-x-3 w-full sm:w-1/2">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Min Score:</span>
+                    <input type="range" id="rating-range" min="0" max="10" step="0.5" value="0" class="w-full accent-brand-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                    <span id="rating-range-val" class="text-sm font-bold text-brand-500 w-8">0.0</span>
+                </div>
+                <div class="text-xs text-slate-400" id="results-count">
+                    Showing 12 movies
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Heading & Watchlist Toggle Notice -->
+        <div class="flex items-center justify-between">
+            <h2 id="section-title" class="text-2xl font-bold text-white flex items-center gap-3">
+                <span class="w-2 h-7 bg-brand-600 rounded-full inline-block"></span>
+                <span>Explore Movies</span>
+            </h2>
+        </div>
+
+        <!-- Movie Grid -->
+        <section id="movie-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
+            <!-- Cards will be dynamically rendered via JavaScript -->
+        </section>
+
+        <!-- Empty State Container (Hidden by default) -->
+        <div id="empty-state" class="hidden text-center py-16 space-y-4">
+            <div class="w-20 h-20 mx-auto rounded-full bg-slate-800/80 flex items-center justify-center text-slate-500 text-3xl border border-slate-700">
+                <i class="fa-solid fa-film-slash"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-300">No Movies Found</h3>
+            <p class="text-slate-400 text-sm max-w-md mx-auto">We couldn't find any movies matching your current search or filter criteria. Try adjusting your settings.</p>
+            <button onclick="resetFilters()" class="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-500 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Reset All Filters</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Detailed Movie Modal -->
+    <div id="movie-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-md transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
+            
+            <!-- Close Modal Button -->
+            <button onclick="closeMovieModal()" class="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center border border-slate-700 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Scrollable Content Wrapper -->
+            <div class="overflow-y-auto flex-grow custom-scrollbar">
+                
+                <!-- Modal Hero Header -->
+                <div class="relative h-64 sm:h-80 bg-slate-950">
+                    <img id="modal-backdrop" src="" alt="Backdrop" class="w-full h-full object-cover opacity-50">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                    
+                    <div class="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row items-start sm:items-end gap-6 z-10">
+                        <img id="modal-poster" src="" alt="Poster" class="w-28 sm:w-36 rounded-xl border-2 border-slate-700 shadow-2xl hidden sm:block object-cover flex-shrink-0">
+                        <div class="space-y-2">
+                            <div class="flex flex-wrap items-center gap-2" id="modal-genres">
+                                <!-- Dynamic Genre Badges -->
+                            </div>
+                            <h2 id="modal-title" class="text-2xl sm:text-4xl font-extrabold text-white">Movie Title</h2>
+                            <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300">
+                                <span id="modal-release"><i class="fa-regular fa-calendar mr-1"></i> 2024</span>
+                                <span id="modal-duration"><i class="fa-regular fa-clock mr-1"></i> 2h 46m</span>
+                                <span id="modal-score" class="text-amber-400 font-bold"><i class="fa-solid fa-star mr-1"></i> 8.8 / 10</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Body Grid -->
+                <div class="p-6 sm:p-8 space-y-8">
+                    
+                    <!-- Action Bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-slate-800/50 border border-slate-800">
+                        <div class="flex items-center space-x-3">
+                            <button id="modal-watchlist-btn" onclick="" class="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-sm transition shadow-lg shadow-brand-600/20">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Watchlist</span>
+                            </button>
+                            <button id="modal-trailer-btn" onclick="" class="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-medium text-sm transition">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Watch Trailer</span>
+                            </button>
+                        </div>
+                        <div class="text-xs text-slate-400">
+                            Director: <span id="modal-director" class="text-slate-200 font-semibold">Director Name</span>
+                        </div>
+                    </div>
+
+                    <!-- Synopsis -->
+                    <div class="space-y-2">
+                        <h3 class="text-lg font-bold text-white border-b border-slate-800 pb-2">Synopsis</h3>
+                        <p id="modal-synopsis" class="text-slate-300 text-sm leading-relaxed">
+                            Detailed summary of the movie plot...
+                        </p>
+                    </div>
+
+                    <!-- Top Cast Section -->
+                    <div class="space-y-3">
+                        <h3 class="text-lg font-bold text-white border-b border-slate-800 pb-2">Key Cast</h3>
+                        <div id="modal-cast" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <!-- Dynamic Cast Items -->
+                        </div>
+                    </div>
+
+                    <!-- Interactive User Rating & Review Submission -->
+                    <div class="p-6 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-4">
+                        <h3 class="text-lg font-bold text-white">Rate & Review This Movie</h3>
+                        
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-slate-300">Your Rating:</span>
+                            <div id="user-star-picker" class="flex space-x-1 text-2xl text-slate-600 cursor-pointer">
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="1"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="2"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="3"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="4"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="5"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="6"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="7"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="8"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="9"></i>
+                                <i class="fa-solid fa-star hover:text-amber-400 transition" data-rating="10"></i>
+                            </div>
+                            <span id="selected-rating-val" class="text-amber-400 font-bold ml-2">0/10</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <input type="text" id="reviewer-name-input" placeholder="Your Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <textarea id="review-text-input" rows="3" placeholder="Write your thoughts about the movie..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"></textarea>
+                            <button onclick="submitUserReview()" class="bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Submit Review</button>
+                        </div>
+                    </div>
+
+                    <!-- Reviews List -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <h3 class="text-lg font-bold text-white">Reviews & Feedback</h3>
+                            <span id="reviews-count-badge" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full font-medium">0 reviews</span>
+                        </div>
+                        <div id="modal-reviews-list" class="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                            <!-- Dynamic Reviews Rendered Here -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trailer Embed Modal -->
+    <div id="trailer-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg">
+        <div class="relative w-full max-w-4xl bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+            <button onclick="closeTrailerModal()" class="absolute top-3 right-3 z-20 w-10 h-10 rounded-full bg-black/60 text-white hover:bg-slate-800 flex items-center justify-center border border-slate-700">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="relative aspect-video w-full bg-black">
+                <iframe id="trailer-iframe" class="w-full h-full" src="" title="Movie Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center space-x-3 bg-slate-800 border border-brand-500 text-white px-5 py-3 rounded-2xl shadow-2xl">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-brand-500 text-xl"></i>
+        <span id="toast-message" class="text-sm font-medium">Notification message</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 border-t border-slate-800/80 bg-slate-950/60 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-2">
+            <p>&copy; 2026 CinePulse Inc. All rights reserved. Cinematic database and review experience.</p>
+            <p class="text-slate-600">Built with standard HTML5, CSS3 Tailwind Framework & JavaScript.</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic Script -->
+    <script>
+        // Movie Database with rich metadata
+        const initialMovies = [
+            {
+                id: "dune-2",
+                title: "Dune: Part Two",
+                year: 2024,
+                duration: "2h 46m",
+                director: "Denis Villeneuve",
+                genres: ["Sci-Fi", "Action", "Adventure"],
+                rating: 8.8,
+                votes: 1420,
+                popularity: 99,
+                poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the universe, he endeavors to prevent a terrible future only he can foresee.",
+                trailer: "https://www.youtube.com/embed/Way9Dexny3w",
+                cast: [
+                    { name: "Timothée Chalamet", role: "Paul Atreides", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Zendaya", role: "Chani", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Rebecca Ferguson", role: "Lady Jessica", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Javier Bardem", role: "Stilgar", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "CinematicMaster", score: 10, text: "A breathtaking sci-fi masterpiece. Denis Villeneuve has created an instant classic.", date: "2024-03-02" },
+                    { user: "FilmFanatic99", score: 9, text: "The audio design and visuals are off the charts. Magnificent storytelling.", date: "2024-03-05" }
+                ]
+            },
+            {
+                id: "oppenheimer",
+                title: "Oppenheimer",
+                year: 2023,
+                duration: "3h 00m",
+                director: "Christopher Nolan",
+                genres: ["Drama", "History", "Thriller"],
+                rating: 8.9,
+                votes: 2150,
+                popularity: 98,
+                poster: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II, examining the moral dilemmas and consequences that followed.",
+                trailer: "https://www.youtube.com/embed/uYPbbksJxIg",
+                cast: [
+                    { name: "Cillian Murphy", role: "J. Robert Oppenheimer", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Emily Blunt", role: "Katherine Oppenheimer", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Matt Damon", role: "Leslie Groves", avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Robert Downey Jr.", role: "Lewis Strauss", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "HistoryBuff", score: 10, text: "Cillian Murphy gives the performance of a lifetime. Nolan's finest work.", date: "2023-07-22" }
+                ]
+            },
+            {
+                id: "spider-verse",
+                title: "Spider-Man: Across the Spider-Verse",
+                year: 2023,
+                duration: "2h 20m",
+                director: "Joaquim Dos Santos, Kemp Powers",
+                genres: ["Animation", "Action", "Sci-Fi"],
+                rating: 8.7,
+                votes: 1890,
+                popularity: 95,
+                poster: "https://images.unsplash.com/photo-1635863138275-d9b33299680b?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence. When the heroes clash on how to handle a new threat, Miles must redefine what it means to be a hero.",
+                trailer: "https://www.youtube.com/embed/cqGjhVJWtEg",
+                cast: [
+                    { name: "Shameik Moore", role: "Miles Morales", avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Hailee Steinfeld", role: "Gwen Stacy", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Oscar Isaac", role: "Miguel O'Hara", avatar: "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "AnimationGeek", score: 10, text: "A visual spectacle that redefines what animation can accomplish.", date: "2023-06-03" }
+                ]
+            },
+            {
+                id: "interstellar",
+                title: "Interstellar",
+                year: 2014,
+                duration: "2h 49m",
+                director: "Christopher Nolan",
+                genres: ["Sci-Fi", "Drama", "Adventure"],
+                rating: 8.7,
+                votes: 3100,
+                popularity: 96,
+                poster: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.",
+                trailer: "https://www.youtube.com/embed/zSWdZVtXT7E",
+                cast: [
+                    { name: "Matthew McConaughey", role: "Cooper", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Anne Hathaway", role: "Brand", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Jessica Chastain", role: "Murph", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "AstroNerd", score: 10, text: "Emotional, scientific, and mesmerizing. Hans Zimmer's score is legendary.", date: "2021-01-15" }
+                ]
+            },
+            {
+                id: "parasite",
+                title: "Parasite",
+                year: 2019,
+                duration: "2h 12m",
+                director: "Bong Joon Ho",
+                genres: ["Thriller", "Drama", "Comedy"],
+                rating: 8.5,
+                votes: 2400,
+                popularity: 92,
+                poster: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+                trailer: "https://www.youtube.com/embed/5xH0HfJHsaY",
+                cast: [
+                    { name: "Song Kang-ho", role: "Kim Ki-taek", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Choi Woo-shik", role: "Kim Ki-woo", avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "CinemaWorld", score: 9, text: "A brilliant commentary on class struggle with unpredictable twists.", date: "2020-02-10" }
+                ]
+            },
+            {
+                id: "the-dark-knight",
+                title: "The Dark Knight",
+                year: 2008,
+                duration: "2h 32m",
+                director: "Christopher Nolan",
+                genres: ["Action", "Crime", "Drama"],
+                rating: 9.0,
+                votes: 4200,
+                popularity: 97,
+                poster: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
+                trailer: "https://www.youtube.com/embed/EXeTwQWrcwY",
+                cast: [
+                    { name: "Christian Bale", role: "Bruce Wayne / Batman", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Heath Ledger", role: "Joker", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "BatFanatic", score: 10, text: "Heath Ledger's performance is legendary. Peak superhero genre cinema.", date: "2019-08-11" }
+                ]
+            },
+            {
+                id: "spirited-away",
+                title: "Spirited Away",
+                year: 2001,
+                duration: "2h 5m",
+                director: "Hayao Miyazaki",
+                genres: ["Animation", "Adventure", "Family"],
+                rating: 8.6,
+                votes: 1750,
+                popularity: 90,
+                poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches and spirits, and where humans are changed into beasts.",
+                trailer: "https://www.youtube.com/embed/ByXuk9QqQkk",
+                cast: [
+                    { name: "Rumi Hiiragi", role: "Chihiro (voice)", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Miyu Irino", role: "Haku (voice)", avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "GhibliLover", score: 10, text: "Pure magic captured on screen. Miyazaki's masterpiece.", date: "2022-04-18" }
+                ]
+            },
+            {
+                id: "everything-everywhere",
+                title: "Everything Everywhere All at Once",
+                year: 2022,
+                duration: "2h 19m",
+                director: "Daniel Kwan, Daniel Scheinert",
+                genres: ["Comedy", "Sci-Fi", "Action"],
+                rating: 8.8,
+                votes: 1950,
+                popularity: 94,
+                poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
+                backdrop: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=1200&q=80",
+                synopsis: "A middle-aged Chinese immigrant is swept up into an insane adventure in which she alone can save existence by exploring other universes and connecting with the lives she could have led.",
+                trailer: "https://www.youtube.com/embed/wxN1T1uxQ2g",
+                cast: [
+                    { name: "Michelle Yeoh", role: "Evelyn Wang", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" },
+                    { name: "Ke Huy Quan", role: "Waymond Wang", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" }
+                ],
+                reviews: [
+                    { user: "MultiverseWatcher", score: 10, text: "Original, heartwarming, wacky, and profoundly moving.", date: "2022-10-05" }
+                ]
+            }
+        ];
+
+        // State Management
+        let movies = [...initialMovies];
+        let watchlist = JSON.parse(localStorage.getItem('cinepulse_watchlist') || '[]');
+        let currentHeroIndex = 0;
+        let selectedMovieForModal = null;
+        let activeUserRating = 0;
+        let isWatchlistView = false;
+
+        // Initialize application state on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeroSlider();
+            renderMoviesGrid();
+            updateWatchlistBadge();
+            setupEventListeners();
+            setupStarPicker();
+        });
+
+        // Setup event listeners for filtering & searching
+        function setupEventListeners() {
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+            document.getElementById('genre-select').addEventListener('change', applyFilters);
+            document.getElementById('sort-select').addEventListener('change', applyFilters);
+            
+            const ratingRange = document.getElementById('rating-range');
+            ratingRange.addEventListener('input', (e) => {
+                document.getElementById('rating-range-val').innerText = parseFloat(e.target.value).toFixed(1);
+                applyFilters();
+            });
+        }
+
+        // Hero Spotlight Banner Carousel
+        function initHeroSlider() {
+            updateHeroContent();
+        }
+
+        function updateHeroContent() {
+            const movie = movies[currentHeroIndex];
+            if (!movie) return;
+
+            document.getElementById('hero-backdrop').style.backgroundImage = `url('${movie.backdrop}')`;
+            document.getElementById('hero-title').innerText = movie.title;
+            document.getElementById('hero-overview').innerText = movie.synopsis;
+            document.getElementById('hero-rating').querySelector('span').innerText = movie.rating.toFixed(1);
+            document.getElementById('hero-year').innerText = movie.year;
+
+            document.getElementById('hero-play-btn').onclick = () => openTrailerModal(movie.trailer);
+            document.getElementById('hero-details-btn').onclick = () => openMovieModal(movie.id);
+        }
+
+        function nextHero() {
+            currentHeroIndex = (currentHeroIndex + 1) % movies.length;
+            updateHeroContent();
+        }
+
+        function prevHero() {
+            currentHeroIndex = (currentHeroIndex - 1 + movies.length) % movies.length;
+            updateHeroContent();
+        }
+
+        // Filter and Search Engine Logic
+        function applyFilters() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            const genreFilter = document.getElementById('genre-select').value;
+            const sortOption = document.getElementById('sort-select').value;
+            const minRating = parseFloat(document.getElementById('rating-range').value);
+
+            let filtered = movies.filter(movie => {
+                // Search matching
+                const matchesSearch = movie.title.toLowerCase().includes(searchQuery) ||
+                    movie.director.toLowerCase().includes(searchQuery) ||
+                    movie.cast.some(c => c.name.toLowerCase().includes(searchQuery));
+
+                // Genre matching
+                const matchesGenre = (genreFilter === 'all') || movie.genres.includes(genreFilter);
+
+                // Min Rating threshold
+                const matchesRating = movie.rating >= minRating;
+
+                // Watchlist View filtering
+                const matchesWatchlist = !isWatchlistView || watchlist.includes(movie.id);
+
+                return matchesSearch && matchesGenre && matchesRating && matchesWatchlist;
+            });
+
+            // Sorting logic
+            filtered.sort((a, b) => {
+                if (sortOption === 'rating-desc') return b.rating - a.rating;
+                if (sortOption === 'rating-asc') return a.rating - b.rating;
+                if (sortOption === 'date-desc') return b.year - a.year;
+                if (sortOption === 'date-asc') return a.year - b.year;
+                if (sortOption === 'popularity') return b.popularity - a.popularity;
+                return 0;
+            });
+
+            renderMoviesGrid(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('genre-select').value = 'all';
+            document.getElementById('sort-select').value = 'popularity';
+            document.getElementById('rating-range').value = 0;
+            document.getElementById('rating-range-val').innerText = '0.0';
+            
+            isWatchlistView = false;
+            document.getElementById('section-title').querySelector('span:last-child').innerText = 'Explore Movies';
+            
+            applyFilters();
+            showToast('Filters reset to default');
+        }
+
+        // Render Movie Grid
+        function renderMoviesGrid(movieList = movies) {
+            const grid = document.getElementById('movie-grid');
+            const emptyState = document.getElementById('empty-state');
+            const resultsCount = document.getElementById('results-count');
+
+            grid.innerHTML = '';
+            resultsCount.innerText = `Showing ${movieList.length} ${movieList.length === 1 ? 'movie' : 'movies'}`;
+
+            if (movieList.length === 0) {
+                emptyState.classList.remove('hidden');
+                grid.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.classList.remove('hidden');
+
+            movieList.forEach(movie => {
+                const isBookmarked = watchlist.includes(movie.id);
+
+                const card = document.createElement('div');
+                card.className = 'movie-card glass-card rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-800/80 group cursor-pointer relative';
+                
+                card.innerHTML = `
+                    <div class="relative overflow-hidden aspect-[2/3] bg-slate-950" onclick="openMovieModal('${movie.id}')">
+                        <img src="${movie.poster}" alt="${movie.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/20 opacity-80 group-hover:opacity-60 transition"></div>
+                        
+                        <!-- Top Floating Badges -->
+                        <div class="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                            <span class="bg-black/60 backdrop-blur-md border border-amber-500/30 text-amber-400 font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-star text-amber-400"></i> ${movie.rating.toFixed(1)}
+                            </span>
+                            <button onclick="event.stopPropagation(); toggleWatchlist('${movie.id}')" class="w-9 h-9 rounded-xl ${isBookmarked ? 'bg-brand-600 text-white' : 'bg-slate-900/80 text-slate-300 hover:text-white'} backdrop-blur-md border border-slate-700/80 flex items-center justify-center transition shadow hover:scale-110">
+                                <i class="fa-solid fa-bookmark text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Hover Synopsis Overlay -->
+                        <div class="absolute inset-x-0 bottom-0 p-4 transform translate-y-full group-hover:translate-y-0 transition duration-300 bg-slate-900/90 backdrop-blur-md border-t border-slate-800">
+                            <p class="text-xs text-slate-300 line-clamp-3 leading-relaxed">${movie.synopsis}</p>
+                        </div>
+                    </div>
+
+                    <!-- Card Header / Metadata -->
+                    <div class="p-4 flex-grow flex flex-col justify-between space-y-3" onclick="openMovieModal('${movie.id}')">
+                        <div>
+                            <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                                <span>${movie.year}</span>
+                                <span>${movie.duration}</span>
+                            </div>
+                            <h3 class="font-bold text-base text-white group-hover:text-brand-500 transition line-clamp-1">${movie.title}</h3>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1">
+                            ${movie.genres.slice(0, 2).map(g => `<span class="bg-slate-800/80 text-slate-300 text-[10px] font-medium px-2 py-0.5 rounded-md border border-slate-700/50">${g}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        // Detailed Movie Modal Logic
+        function openMovieModal(movieId) {
+            const movie = movies.find(m => m.id === movieId);
+            if (!movie) return;
+
+            selectedMovieForModal = movie;
+
+            document.getElementById('modal-backdrop').src = movie.backdrop;
+            document.getElementById('modal-poster').src = movie.poster;
+            document.getElementById('modal-title').innerText = movie.title;
+            document.getElementById('modal-release').innerHTML = `<i class="fa-regular fa-calendar mr-1"></i> ${movie.year}`;
+            document.getElementById('modal-duration').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> ${movie.duration}`;
+            document.getElementById('modal-score').innerHTML = `<i class="fa-solid fa-star mr-1"></i> ${movie.rating.toFixed(1)} / 10 <span class="text-xs text-slate-400 font-normal">(${movie.votes} votes)</span>`;
+            document.getElementById('modal-director').innerText = movie.director;
+            document.getElementById('modal-synopsis').innerText = movie.synopsis;
+
+            // Render Genre Badges
+            const genresContainer = document.getElementById('modal-genres');
+            genresContainer.innerHTML = movie.genres.map(g => `<span class="bg-brand-600/30 border border-brand-500/40 text-brand-300 text-xs font-semibold px-2.5 py-0.5 rounded-md">${g}</span>`).join('');
+
+            // Render Cast Grid
+            const castContainer = document.getElementById('modal-cast');
+            castContainer.innerHTML = movie.cast.map(c => `
+                <div class="flex items-center space-x-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                    <img src="${c.avatar}" alt="${c.name}" class="w-10 h-10 rounded-full object-cover border border-slate-700">
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-semibold text-white truncate">${c.name}</p>
+                        <p class="text-[10px] text-slate-400 truncate">${c.role}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Setup Trailer & Watchlist buttons inside modal
+            const isBookmarked = watchlist.includes(movie.id);
+            const watchlistBtn = document.getElementById('modal-watchlist-btn');
+            watchlistBtn.className = `flex items-center space-x-2 px-4 py-2.5 rounded-xl text-white font-medium text-sm transition ${isBookmarked ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-brand-600 hover:bg-brand-500'}`;
+            watchlistBtn.innerHTML = `<i class="fa-solid ${isBookmarked ? 'fa-check' : 'fa-bookmark'}"></i> <span>${isBookmarked ? 'In Watchlist' : 'Add to Watchlist'}</span>`;
+            watchlistBtn.onclick = () => {
+                toggleWatchlist(movie.id);
+                openMovieModal(movie.id); // Refresh modal button state
+            };
+
+            document.getElementById('modal-trailer-btn').onclick = () => openTrailerModal(movie.trailer);
+
+            // Render Reviews List
+            renderModalReviews();
+
+            // Reset Star Picker
+            resetStarPicker();
+
+            // Display Modal
+            const modal = document.getElementById('movie-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMovieModal() {
+            document.getElementById('movie-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+            selectedMovieForModal = null;
+        }
+
+        // Render Reviews inside Modal
+        function renderModalReviews() {
+            if (!selectedMovieForModal) return;
+
+            const container = document.getElementById('modal-reviews-list');
+            const reviews = selectedMovieForModal.reviews || [];
+
+            document.getElementById('reviews-count-badge').innerText = `${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'}`;
+
+            if (reviews.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No reviews yet. Be the first to share your review!</p>`;
+                return;
+            }
+
+            container.innerHTML = reviews.map(r => `
+                <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-white">${escapeHTML(r.user)}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-star text-[10px]"></i> ${r.score}/10</span>
+                            <span class="text-[10px] text-slate-500">${r.date}</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">${escapeHTML(r.text)}</p>
+                </div>
+            `).join('');
+        }
+
+        // Star Picker Interactive Logic
+        function setupStarPicker() {
+            const stars = document.querySelectorAll('#user-star-picker i');
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    highlightStars(rating);
+                });
+
+                star.addEventListener('mouseout', function() {
+                    highlightStars(activeUserRating);
+                });
+
+                star.addEventListener('click', function() {
+                    activeUserRating = parseInt(this.getAttribute('data-rating'));
+                    document.getElementById('selected-rating-val').innerText = `${activeUserRating}/10`;
+                    highlightStars(activeUserRating);
+                });
+            });
+        }
+
+        function highlightStars(count) {
+            const stars = document.querySelectorAll('#user-star-picker i');
+            stars.forEach((star, idx) => {
+                if (idx < count) {
+                    star.classList.add('text-amber-400');
+                    star.classList.remove('text-slate-600');
+                } else {
+                    star.classList.remove('text-amber-400');
+                    star.classList.add('text-slate-600');
+                }
+            });
+        }
+
+        function resetStarPicker() {
+            activeUserRating = 0;
+            document.getElementById('selected-rating-val').innerText = '0/10';
+            highlightStars(0);
+            document.getElementById('reviewer-name-input').value = '';
+            document.getElementById('review-text-input').value = '';
+        }
+
+        // Submit User Review and Recalculate Average
+        function submitUserReview() {
+            if (!selectedMovieForModal) return;
+
+            const name = document.getElementById('reviewer-name-input').value.trim();
+            const text = document.getElementById('review-text-input').value.trim();
+
+            if (!name || !text || activeUserRating === 0) {
+                showToast('Please provide your name, a star rating, and review text.', 'warning');
+                return;
+            }
+
+            const newReview = {
+                user: name,
+                score: activeUserRating,
+                text: text,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            // Push Review
+            selectedMovieForModal.reviews.unshift(newReview);
+
+            // Dynamic Average Calculation
+            const totalVotes = selectedMovieForModal.votes + 1;
+            const newAverage = ((selectedMovieForModal.rating * selectedMovieForModal.votes) + activeUserRating) / totalVotes;
+
+            selectedMovieForModal.votes = totalVotes;
+            selectedMovieForModal.rating = parseFloat(newAverage.toFixed(1));
+
+            // Refresh UI
+            renderModalReviews();
+            document.getElementById('modal-score').innerHTML = `<i class="fa-solid fa-star mr-1"></i> ${selectedMovieForModal.rating.toFixed(1)} / 10 <span class="text-xs text-slate-400 font-normal">(${selectedMovieForModal.votes} votes)</span>`;
+            applyFilters();
+
+            resetStarPicker();
+            showToast('Thank you! Your review has been submitted.');
+        }
+
+        // Watchlist Local Storage Operations
+        function toggleWatchlist(movieId) {
+            const index = watchlist.indexOf(movieId);
+            if (index > -1) {
+                watchlist.splice(index, 1);
+                showToast('Removed from Watchlist');
+            } else {
+                watchlist.push(movieId);
+                showToast('Added to Watchlist!');
+            }
+
+            localStorage.setItem('cinepulse_watchlist', JSON.stringify(watchlist));
+            updateWatchlistBadge();
+            applyFilters();
+        }
+
+        function updateWatchlistBadge() {
+            document.getElementById('watchlist-badge').innerText = watchlist.length;
+        }
+
+        function toggleWatchlistView() {
+            isWatchlistView = !isWatchlistView;
+            const sectionTitle = document.getElementById('section-title').querySelector('span:last-child');
+
+            if (isWatchlistView) {
+                sectionTitle.innerText = 'My Watchlist';
+                showToast('Displaying saved watchlist movies');
+            } else {
+                sectionTitle.innerText = 'Explore Movies';
+            }
+
+            applyFilters();
+        }
+
+        // Trailer Video Player Modal
+        function openTrailerModal(trailerUrl) {
+            const modal = document.getElementById('trailer-modal');
+            const iframe = document.getElementById('trailer-iframe');
+            iframe.src = `${trailerUrl}?autoplay=1`;
+            modal.classList.remove('hidden');
+        }
+
+        function closeTrailerModal() {
+            const modal = document.getElementById('trailer-modal');
+            const iframe = document.getElementById('trailer-iframe');
+            iframe.src = '';
+            modal.classList.add('hidden');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMessage.innerText = message;
+            if (type === 'warning') {
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-amber-500 text-xl';
+                toast.classList.replace('border-brand-500', 'border-amber-500');
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-check text-brand-500 text-xl';
+                toast.classList.replace('border-amber-500', 'border-brand-500');
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Utility: HTML Escaping
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
